@@ -252,29 +252,29 @@ fn main(){
             let main_window = app.get_webview("stream-1").unwrap();
             app.listen("returnTrigger", move |event| {
                 let element: String = serde_json::from_str(event.payload()).unwrap();
-                let trigger = format!("{}.capture.trigger", element.clone());
+                //let trigger = format!("{}.capture.trigger", element.clone());
                 let size = format!{"{}.capture.size", element.clone()};
                 let blocksize = format!{"{}.capture.blocksize", element.clone()};
                 let block = format!("{}.capture.block", element.clone());
-                let _ = rpc(&[trigger]);
+                //let _ = rpc(&[trigger]);
 
                 let mut num_block: f32 = 0.0;
                 if let Ok(size_result) = rpc(&[size]) {
                     let size32: f32 = size_result.parse().expect("err");
                     if let Ok(blocksize_result) = rpc(&[blocksize]){
                         let blocksize32: f32 = blocksize_result.parse().expect("err");
-                        let block_len = (size32/blocksize32).floor();
+                        let block_len = (size32/blocksize32).ceil();
                         num_block = block_len;
                     }
                 }
                 let args: Vec<String> = env::args().collect();
                 let mut result_list: Vec<u8> = Vec::new();
-                for i in 0..(num_block as i32 + 1){
+                for i in 0..(num_block as i32){
                     let mut command = vec!["rpc".to_string(), "-t".to_string(), "-T".to_string(), "string".to_string()];
                     command.insert(1, block.clone());
                     command.insert(2, i.to_string());
                     command.insert(4, args[2].clone());
-                    if let Ok(passed) = rpc(&command[1..]){    
+                    if let Ok(passed) = rpc(&command[1..]){   
                         let passed = passed.replace("[", "");
                         let passed = passed.replace("]", "");
                         let new= passed[2..].trim();
@@ -286,8 +286,8 @@ fn main(){
                     }
                 }       
 
-                let results = u8_to_f32_vec(&result_list);
-                println!("{:?}", results);
+                /*let results = u8_to_f32_vec(&result_list);
+                println!("{:?}", results);*/
                 let emit_name: Vec<&str> = element.split('.').collect();
                 let _ = main_window.emit(emit_name[0], &result_list.clone());
             });
