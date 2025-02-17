@@ -14,6 +14,7 @@ webpage.once("buttons", (event) => {
   createGraph(button)
 
   button.addEventListener('click', function() {
+    console.log("moved")
     webpage.emit('returnTrigger', button.id )
   })
 })
