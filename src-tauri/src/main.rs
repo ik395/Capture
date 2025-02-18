@@ -234,6 +234,14 @@ fn u8_to_f32_vec(v: &[u8]) -> Vec<f32> {
         .collect()
 }
 
+fn u8_to_u16_vec(v: &[u8]) -> Vec<u16> {
+    v.chunks_exact(2)
+        .map(TryInto::try_into)
+        .map(Result::unwrap)
+        .map(u16::from_le_bytes)
+        .collect()
+}
+
 fn main(){
     tauri::Builder::default()
         .setup(|app| {
@@ -267,8 +275,8 @@ fn main(){
                         num_block = block_len;
                     }
                 }
-                let args: Vec<String> = env::args().collect();
-                let mut result_list: Vec<u8> = Vec::new();
+                let mut args: Vec<String> = env::args().collect();
+                let mut bytes_list: Vec<u8> = Vec::new();
                 for i in 0..(num_block as i32){
                     let mut command = vec!["rpc".to_string(), "-t".to_string(), "-T".to_string(), "string".to_string()];
                     command.insert(1, block.clone());
@@ -281,15 +289,26 @@ fn main(){
                         
                         let parts: Vec<&str> = new.trim().split(',').collect();
                         for part in parts{
-                            result_list.push(part.trim().parse::<u8>().unwrap_or(0)); 
+                            bytes_list.push(part.trim().parse::<u8>().unwrap_or(0)); 
                         }
                     }
                 }       
 
-                /*let results = u8_to_f32_vec(&result_list);
-                println!("{:?}", results);*/
-                let emit_name: Vec<&str> = element.split('.').collect();
-                let _ = main_window.emit(emit_name[0], &result_list.clone());
+                if args.len() < 4{
+                    args.push("u16".to_string());
+                }
+                if args[3].clone().as_str() == "u16" {
+                    let result = u8_to_u16_vec(&bytes_list);
+                    println!("{:?}\n", result);
+                    let emit_name: Vec<&str> = element.split('.').collect();
+                    let _ = main_window.emit(emit_name[0], &result.clone());
+                } else if args[3].clone().as_str() == "f32"{
+                    let result = u8_to_f32_vec(&bytes_list);
+                    println!("{:?}\n", result);
+                    let emit_name: Vec<&str> = element.split('.').collect();
+                    let _ = main_window.emit(emit_name[0], &result.clone());
+                }
+            
             });
             Ok(())
         })

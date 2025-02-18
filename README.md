@@ -2,4 +2,4 @@
 
 Tool for signal capture and graphical analysis
 ### To run
-    cargo run <rpc_prefix> <data_type>
+    cargo run <rpc_prefix> <data_type> <reinterpret_type>
